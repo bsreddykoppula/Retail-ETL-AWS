@@ -1,0 +1,20 @@
+# glue_scripts/sales_transformer.py
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+
+glue_context = GlueContext(SparkContext.getOrCreate())
+spark = glue_context.spark_session
+
+# Read raw data from S3
+raw_df = spark.read.json("s3://retail-raw-data/shopify_orders_*.json")
+
+# Transform: Flatten nested fields & calculate metrics
+transformed_df = raw_df.selectExpr(
+    "order_id", 
+    "customer.first_name as customer_name",
+    "total_price as revenue",
+    "created_at as order_date"
+).withColumn("profit", col("revenue") * 0.25)  # Example business logic
+
+# Write to S3 in Parquet format
+transformed_df.write.mode("overwrite").parquet("s3://retail-processed-data/sales/")
