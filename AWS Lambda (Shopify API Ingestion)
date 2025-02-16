@@ -1,0 +1,21 @@
+# lambda_data_ingestion/shopify_ingestor.py
+import boto3
+import requests
+import json
+
+s3 = boto3.client('s3')
+
+def lambda_handler(event, context):
+    # Fetch data from Shopify API
+    api_url = "https://your-store.myshopify.com/admin/api/2023-04/orders.json"
+    headers = {"X-Shopify-Access-Token": "YOUR_TOKEN"}
+    response = requests.get(api_url, headers=headers)
+    orders = response.json()['orders']
+    
+    # Upload to S3
+    s3.put_object(
+        Bucket="retail-raw-data",
+        Key=f"shopify_orders_{event['date']}.json",
+        Body=json.dumps(orders)
+    )
+    return {"status": "success"}
