@@ -1,0 +1,13 @@
+-- dbt_models/inventory_turnover.sql
+{{
+  config(
+    materialized='table',
+    sort='sku'
+  )
+}}
+
+SELECT
+  sku,
+  SUM(sold_units) / AVG(stock_quantity) AS inventory_turnover_ratio
+FROM {{ ref('sales_fact') }}
+GROUP BY 1
